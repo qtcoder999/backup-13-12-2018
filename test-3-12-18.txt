@@ -1,0 +1,130 @@
+const { createStore, combineReducers } = Redux;
+const { Provider, connect } = ReactRedux;
+
+// TEXT_INPUT_COMPONENT
+const TextInput = ({textInputValue, inputName, onChangeHandler}) =>
+(<div><input value={textInputValue} name={inputName} onChange={onChangeHandler} placeholder='' /></div>)
+
+// ADD_BUTTON_COMPONENT
+const AddBtn = ({addToDo, btnName}) => (<button onClick={addToDo}>{btnName}</button>)
+
+// LIST_ITEM_COMPONENT
+const ListItem = ({item, deleteToDo}) => (<li><span>{item.text} </span><button onClick={(e) => {deleteToDo(item.id)}}>Delete</button></li>)
+
+// Complete the LIST_COMPONENT
+const List = ({list, deleteToDo}) => (<div className="list">{list && <ul>{list.map(item => <ListItem key={item.id} item={item} deleteToDo={deleteToDo} />)}</ul>}</div>)
+
+// Complete the three Action Creators - saveTextValueAction, addToDoAction, deleteToDoAction here
+
+// const saveTextValueAction;
+// const addToDoAction;
+// const deleteToDoAction;
+
+//Complete the TODO_COMPONENT
+class Todo extends React.Component {
+  constructor(props) {
+    super(props);
+    this.saveTextInput = this.saveTextInput.bind(this);
+    this.addToDo = this.addToDo.bind(this);
+    this.deleteToDo = this.deleteToDo.bind(this);
+  }
+  
+  inputChangeHandler(event){
+    let { saveTextInput } = this.props;
+    this.saveTextInput(event.target.value);
+  }
+  
+  saveTextInput(text){
+    this.props.sendValToStore(text)
+  }
+  
+  addToDo(){
+    let { addTodo, textInputValue } = this.props.todo;
+    let todo = {
+      text : textInputValue,
+      id :  new Date().getUTCMilliseconds() // Used to Generate unique id
+    }
+    this.props.addTodo(todo);
+  }
+  
+  deleteToDo(todoid) {
+    let { deleteTodo } = this.props;
+    deleteTodo(todoid);
+  }
+  
+  //Complete the render function
+  render () {
+     let { textInputValue, list } = this.props.todo;
+    return (<div className='todoapp'>
+       <div className='one-line'>
+          <TextInput inputName='todoInput' textInputValue={this.props.todo.textInputValue} onChangeHandler={(e) => this.inputChangeHandler(e)}/>
+         <AddBtn btnName="Add" addToDo={this.addToDo}/>    
+        </div>
+       <List list={list} deleteToDo={this.deleteToDo}/>
+    </div>)
+  }
+}
+
+const mapStateToProps = (state) => {
+  console.log({...state});
+  return {
+    ...state
+  }
+    
+};
+
+const mapDispatchToProps = (dispatch) => ({
+  sendValToStore : (text) => dispatch({ type: "UPDATE_STORE", textVal: text}),
+  addTodo : (todo) => dispatch({ type: "ADD_TODO", newList: todo}),
+  deleteTodo : (todoid) => dispatch({ type: "DEL_TODO", id: todoid})
+  //Call action creators of Save text input, Add Task and Delete Task actions namely- saveTextInput, addToDo, deleteToDo
+})
+
+const ToDoContainer = connect(mapStateToProps,mapDispatchToProps)(Todo);
+
+//InitialState
+const initialState = {
+  textInputValue : '',
+  list : []
+}
+
+//Complete the reducer
+const toDoReducer = (state = initialState, action) => {
+  let newState = state;
+  switch(action.type){
+    case 'ADD_TODO' : {
+      newState.list.push(action.newList);
+      newState.textInputValue = ''
+      return Object.assign({}, state, newState);
+    } ;
+    case 'DEL_TODO' : {
+      
+      index = newState.list.findIndex(x => x.id == action.id);
+      newState.list.splice(index,1);
+
+      //newState.list.push(action.newList);
+      return Object.assign({}, state, newState);
+    } ;
+    case 'UPDATE_STORE': {
+      newState.textInputValue = action.textVal;
+      return Object.assign({}, state, newState);
+      
+    } ; 
+  
+  }
+  
+  return state;
+}
+
+const rootReducer = combineReducers({
+  todo : toDoReducer
+});
+
+
+const store = createStore(rootReducer);
+
+const App = () => <Provider store={store}><ToDoContainer /></Provider>
+
+const DOMNode = document.getElementById('todo');
+
+ReactDOM.render(<App />,DOMNode);

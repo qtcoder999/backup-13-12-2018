@@ -1,0 +1,160 @@
+const {  createStore } = Redux;
+const { Provider, connect } = ReactRedux;
+
+const initialState = {
+  todo : [],
+  currentFilterType: 'All',
+  initVal : ''
+}
+
+const reducer = (state = initialState, action) => {
+
+    let newState = state;
+
+    switch (action.type) {
+        case 'UPDATE_INIT_VAL': {
+            return Object.assign({}, state, { initVal: action.val });
+        }
+        case 'ADD': {
+            return Object.assign({}, state, { todo: [...state.todo, { itemName: state.initVal, status: 0 }], initVal: '' });
+            break;
+        }
+
+        case 'REMOVE': {
+            //console.log(action.key);
+            var newArr = Object.assign([], state.todo);
+            // console.log(newArr);
+            // const result = newArr.filter(item => item.key != action.key);
+
+            newArr.splice(action.key, 1);
+            newState.todo = newArr;
+              
+          
+            newState = Object.assign({}, state, { todo: newState.todo });
+
+            return newState;
+            break;
+        }
+
+        case 'TOGGLE_COMPLETION_STATUS': {
+
+            var newArr = Object.assign([], newState.todo);
+            newArr[action.key].status ? newArr[action.key].status = 0 : newArr[action.key].status = 1;
+            newState.todo = newArr;
+
+            newState = Object.assign({}, state, { todo: newState.todo });
+
+            return newState;
+            break;
+        }
+        case 'APPLY_FILTERS': {
+            
+            return Object.assign({}, state, { currentFilterType : action.filterType });
+            
+            break;
+
+        }
+        default: {
+            return newState;
+            break;
+        }
+            return newState;
+    }
+}
+
+const store = createStore(reducer);
+
+class App extends React.Component{
+  constructor(props){
+    super(props);
+    this.newArray = this.props.todo;
+  }
+  UpdateArray(){
+    this.newArr = this.props.todo;
+      if(this.props.currentFilterType == 'All'){
+          this.newArray = this.props.todo.filter(status != 'undefined' );
+      }  
+      else if(this.props.currentFilterType == 'Completed'){
+          this.newArray = this.props.todo.filter(status == 1);
+      }
+      else if(this.props.currentFilterType == 'Not_completed'){
+          this.newArray = this.props.todo.filter(status == 0);
+      }
+  }
+    
+  render(){  
+      return(
+          <div>
+            <input type='text' name='item' value={this.props.initVal} onChange={this.props.onchange}/>
+            <input type='button' value='ADD' onClick={this.props.add}/>
+        
+              <ul>
+              
+            {
+              //console.log(...this.props.todo)
+              //console.log(this.props)
+              //console.log(store.getState())
+            }
+                {
+                
+                    
+                  //this.props
+                  
+                  this.props.todo.map( (obj, i) => {
+                   return (
+
+                        <li className={ obj.status == 1 ? 'strikeout' : 'none' } key={i}>{obj.itemName} 
+                            <input type="checkbox" 
+                              onChange={this.props.toggle.bind(this, event, i)} 
+                              defaultChecked={obj.status == 1}/>
+                                
+                            <button onClick={this.props.remove.bind(this, i)}>Delete this entry</button>
+                        </li>
+                    )
+                })  
+              }
+
+              
+              </ul>
+
+          <input type="radio" name="visibility" onChange={this.props.visibility} value="All"/> All 
+          <input type="radio" name="visibility" onChange={this.props.visibility} value="Completed"/> Completed
+          <input type="radio" name="visibility" onChange={this.props.visibility} value="Not_completed"/> Not Completed
+ </div>
+      )    
+  }
+}
+
+
+function mapStateToProps(state) {
+    
+  // console.log(...state.todo);
+  // console.log(state.currentFilterType);
+  
+    return {
+        ...state
+    }
+}
+
+function mapDispatchToProps(dispatch) {
+    return {
+        add: () => dispatch({ type: 'ADD' }),
+        remove: (i) =>  dispatch({ type: 'REMOVE', key: i }),
+        toggle: (event, i) => dispatch({ type: 'TOGGLE_COMPLETION_STATUS', val: event.target.checked, key: i }),
+        onchange: (event) => dispatch({ type: 'UPDATE_INIT_VAL', val: event.target.value }),
+        visibility: (event) => dispatch({ type: 'APPLY_FILTERS', filterType: event.target.value })
+    }
+}
+
+const AppContainer = connect(
+    mapStateToProps, mapDispatchToProps
+)(App)
+
+const app = document.getElementById('root');
+
+ReactDOM.render(
+    <Provider>
+      <AppContainer store={store} />
+    </Provider>,
+    app
+)

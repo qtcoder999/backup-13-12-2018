@@ -1,0 +1,56 @@
+const {createStore} = Redux;
+const {connect, Provider} = ReactRedux;
+
+class App extends React.Component{
+  render(){
+    return(
+      <div>
+        <h1>Paras {this.props.counter}</h1>
+            <button onClick={this.props.increment}>Increment</button>
+            <button onClick={this.props.decrement}>Decrement</button>
+      </div>
+    )
+  }
+}
+
+const INITIAL_STATE = {
+  counter : 1
+}
+
+const reducer = (state = INITIAL_STATE, action) => {
+  let newState ={...state};
+  switch(action.type){
+    case 'INC': {newState.counter++; return newState;}
+    case 'DEC': {newState.counter--; return newState;}
+    default : return newState;
+  }
+  return newState;
+}
+//
+const store = createStore(reducer);
+
+const mapStateToProps = (state) => {
+    return {...state}
+}
+
+
+// const mapDispatchToProps = (dispatch) => {
+//     increment: () => dispatch({type: 'INC'}),
+//     decrement: () => dispatch({type: 'DEC'}) 
+// }
+
+const mapDispatchToProps = dispatch => {
+  return {
+    // dispatching plain actions
+    increment: () => dispatch({ type: "INC" }),
+    decrement: () => dispatch({ type: "DEC" })
+  };
+};
+
+const AppContainer = connect(mapStateToProps, mapDispatchToProps)(App)
+
+const root = document.getElementById('root');
+
+ReactDOM.render(<Provider store={store}>
+                <AppContainer/>
+                </Provider>, root);
